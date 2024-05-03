@@ -19,56 +19,65 @@ def get_all_page():
 
 @app.route('/', methods=['GET'])
 def parse_html():
-    r = requests.get('https://africa-cuisine.com/')
-    parse = BeautifulSoup(r.content, 'html.parser')
-    recipes_tab = {}
+    try:
+        with open('recipe.json',"w") as df:
+            data = js.load(df)
+        return data
+    except:
+        r = requests.get('https://africa-cuisine.com/')
+        parse = BeautifulSoup(r.content, 'html.parser')
+        recipes_tab = {}
 
-    id = 0
-    recipes = parse.find_all('div', class_='archive-item-i')
-    for recipe in recipes:
-        nom = recipe.find('h3', class_='entry-title').a.text.strip()
-        link = recipe.find('h3', class_='entry-title').a.attrs['href']
+        id = 0
+        recipes = parse.find_all('div', class_='archive-item-i')
+        for recipe in recipes:
+            nom = recipe.find('h3', class_='entry-title').a.text.strip()
+            link = recipe.find('h3', class_='entry-title').a.attrs['href']
 
-        inset = requests.get(link)
-        html = BeautifulSoup(inset.content, 'html.parser')
-        thumbails = html.find('div', class_="single-main-media-image-w")['data-lightbox-img-src']
+            inset = requests.get(link)
+            html = BeautifulSoup(inset.content, 'html.parser')
+            thumbails = html.find('div', class_="single-main-media-image-w")['data-lightbox-img-src']
 
-        ingredients = []
-        ing = html.find('table', class_='ingredients-table').find_all('tr')
-        for i in ing:
-            try:
-                name = i.find('span', class_='ingredient-amount').text.strip()+' '+i.find('span', class_='ingredient-name').text.strip()
-                ingredients.append(name)
-            except AttributeError:
-                pass
+            ingredients = []
+            ing = html.find('table', class_='ingredients-table').find_all('tr')
+            for i in ing:
+                try:
+                    name = i.find('span', class_='ingredient-amount').text.strip()+' '+i.find('span', class_='ingredient-name').text.strip()
+                    ingredients.append(name)
+                except AttributeError:
+                    pass
 
-        steps = []
-        sp = html.find('table', class_='recipe-steps-table').find_all('td', class_="single-step-description")
-        nbr = 1
-        for i in sp:
-            desc = i.find('p').text.strip()
-            try:
-                sp_title = i.find('h3', class_='single-step-title').text.strip()
-            except:
-                sp_title = ''
-            steps.append({
-                "step_id": nbr,
-                "name": sp_title,
-                "description": f"{desc}",
-            })
-            nbr += 1
+            steps = []
+            sp = html.find('table', class_='recipe-steps-table').find_all('td', class_="single-step-description")
+            nbr = 1
+            for i in sp:
+                desc = i.find('p').text.strip()
+                try:
+                    sp_title = i.find('h3', class_='single-step-title').text.strip()
+                except:
+                    sp_title = ''
+                steps.append({
+                     "step_id": nbr,
+                     "name": sp_title,
+                     "description": f"{desc}",
+                 })
+                nbr += 1
 
-        data = {
-            "title": nom,
-            "thumbails": thumbails,
-            "ingredients": ingredients,
-            "steps": steps,
-        }
+            data = {
+                "title": nom,
+                "thumbails": thumbails,
+                "ingredients": ingredients,
+                "steps": steps,
+            }
 
-        recipes_tab[str(id)] = data
-        id += 1
-
-    return js.dumps(recipes_tab, indent=4)
+            recipes_tab[str(id)] = data
+            id += 1
+            
+        res = js.dumps(recipes_tab, indent=4)
+        with open('recipe.json' "w") as fs:
+            fs.writelines(res)
+            
+        return res
 
 
 if __name__ == '__main__':

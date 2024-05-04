@@ -74,7 +74,7 @@ def parse_html():
             id += 1
             
         res = js.dumps(recipes_tab, indent=4)
-        with open('recipe.json' "w") as fs:
+        with open('recipe.json', "w") as fs:
             fs.writelines(res)
             
         return res

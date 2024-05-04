@@ -20,7 +20,7 @@ def get_all_page():
 @app.route('/', methods=['GET'])
 def parse_html():
     try:
-        with open('recipe.json',"w") as df:
+        with open('recipe.json',"r") as df:
             data = js.load(df)
         return data
     except:
